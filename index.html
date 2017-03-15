@@ -20,30 +20,70 @@
             margin-top: 30px;
         }
         
-        .status-box {
-            /*border: 1px solid black;*/
-            /*margin-right: 20px;*/
+        #messageArea {
+            display: none;
         }
         
-        .messages-box {
-            /*border: 1px solid black;*/
-            /*margin-right: 20px;*/
-            padding-top: 20px;
+        .messages-box .card-body {
+            padding: 0 10px 0 10px;
         }
+        
+        .col {
+            float: left;
+        }
+
+        #their-video {
+            display: none;
+        }
+
     </style>
     <script src="/socket.io/socket.io.js"></script>
 
     <script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
     <script>
         $(function() {
-            var socket = io();
-            $('form').submit(function() {
-                socket.emit('chat message', $('#m').val());
-                $('#m').val('');
+            var socket = io.connect();
+            var $messageForm = $('#messageForm');
+            var $message = $('#message');
+            var $chatContent = $('#chatContent');
+            var $userForm = $('#userForm');
+            var $userFormArea = $('#userFormArea');
+            var $messageArea = $('#messageArea');
+            var $users = $('#list-users');
+            var $username = $('#username');
+
+            $messageForm.submit(function() {
+                // e.prventDefault();
+                console.log($message.val());
+                socket.emit('send message', $message.val());
+                $message.val('');
                 return false;
             });
-            socket.on('chat message', function(msg) {
-                $('#messages').append($('<li>').text(msg));
+
+            socket.on('new message', function(data) {
+                console.log(data);
+                $chatContent.append($('<div class="well"><strong>' + data.user + '</strong>: ' + data.msg + '</div>'));
+            });
+
+            $userForm.submit(function() {
+                // e.prventDefault();
+                console.log($username.val());
+                socket.emit('new user', $username.val(), function(data) {
+                    if (data) {
+                        $userFormArea.hide();
+                        $messageArea.show();
+                    }
+                });
+                $username.val('');
+                return false;
+            });
+
+            socket.on('get users', function(data) {
+                var html = '';
+                for (i = 0; i < data.length; i++) {
+                    html += '<li class="list-group-item">' + data[i] + '</li>';
+                }
+                $users.html(html);
             });
         });
 
@@ -56,142 +96,170 @@
             debug: 3
         });
 
-         peer.on('open', function(){
-      $('#my-id').text(peer.id);
-    });
+        peer.on('open', function() {
+            $('#my-id').text(peer.id);
+        });
 
-    // Receiving a call
-    peer.on('call', function(call){
-      // Answer the call automatically (instead of prompting user) for demo purposes
-      call.answer(window.localStream);
-      step3(call);
-    });
-    peer.on('error', function(err){
-      alert(err.message);
-      // Return to step 2 if error occurs
-      step2();
-    });
+        // Receiving a call
+        peer.on('call', function(call) {
+            // Answer the call automatically (instead of prompting user) for demo purposes
+            call.answer(window.localStream);
+            remoteControl(call);
+        });
+        peer.on('error', function(err) {
+            alert(err.message);
+            // Return to step 2 if error occurs
+            infoLocal();
+        });
 
-    // Click handlers setup
-    $(function(){
-      $('#make-call').click(function(){
-        // Initiate a call!
-        var call = peer.call($('#callto-id').val(), window.localStream);
+        // Click handlers setup
+        $(function() {
+            $('#make-call').click(function() {
+                // Initiate a call!
+                var call = peer.call($('#callto-id').val(), window.localStream);
 
-        step3(call);
-      });
+                remoteControl(call);
+            });
 
-      $('#end-call').click(function(){
-        window.existingCall.close();
-        step2();
-      });
+            $('#end-call').click(function() {
+                window.existingCall.close();
+                $('#their-video').hide();
+                infoLocal();
+            });
 
-      // Retry if getUserMedia fails
-      $('#step1-retry').click(function(){
-        $('#step1-error').hide();
-        step1();
-      });
+            // Retry if getUserMedia fails
+            $('#localVideo-retry').click(function() {
+                $('#localVideo-error').hide();
+                localVideo();
+            });
 
-      // Get things started
-      step1();
-    });
+            // Get things started
+            // localVideo();
+        });
 
-    function step1 () {
-      // Get audio/video stream
-      navigator.getUserMedia({audio: true, video: true}, function(stream){
-        // Set your video displays
-        $('#my-video').prop('src', URL.createObjectURL(stream));
+        function localVideo() {
+            // Get audio/video stream
+            navigator.getUserMedia({
+                audio: true,
+                video: true
+            }, function(stream) {
+                // Set your video displays
+                $('#my-video').prop('src', URL.createObjectURL(stream));
+                window.localStream = stream;
+                infoLocal();
+            }, function() {
+                $('#localVideo-error').show();
+            });
+        }
 
-        window.localStream = stream;
-        step2();
-      }, function(){ $('#step1-error').show(); });
-    }
+        function infoLocal() {
+            $('#localVideo, #remoteControl').hide();
+            $('#their-video').hide();
+            $('#infoLocal').show();
+        }
 
-    function step2 () {
-      $('#step1, #step3').hide();
-      $('#step2').show();
-    }
+        function remoteControl(call) {
+            // Hang up on an existing call if present
+            if (window.existingCall) {
+                window.existingCall.close();
+            }
 
-    function step3 (call) {
-      // Hang up on an existing call if present
-      if (window.existingCall) {
-        window.existingCall.close();
-      }
+            // Wait for stream on the call, then set peer video display
+            call.on('stream', function(stream) {
+                $('#their-video').prop('src', URL.createObjectURL(stream));
+                $('#their-video').show();
+            });
 
-      // Wait for stream on the call, then set peer video display
-      call.on('stream', function(stream){
-        $('#their-video').prop('src', URL.createObjectURL(stream));
-      });
-
-      // UI stuff
-      window.existingCall = call;
-      $('#their-id').text(call.peer);
-      call.on('close', step2);
-      $('#step1, #step2').hide();
-      $('#step3').show();
-    }
-
+            // UI stuff
+            window.existingCall = call;
+            $('#their-id').text(call.peer);
+            call.on('close', infoLocal);
+            $('#localVideo, #infoLocal').hide();
+            $('#remoteControl').show();
+        }
     </script>
     <!-- <script src='/adapter/adapter.js'></script> -->
 </head>
 
 <body>
     <div class="container">
-        <div class="row">
-            <div class="col-md-3 status-box">
-                <div class="card">
-                    <div class="card-header">
-                        Onlines
+        <div id="userFormArea" class="row">
+            <div class="col-md-6">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label>Enter Username</label>
+                        <input class="form-control" id="username">
+                        <input type="submit" class="btn btn-primary" value="Login">
                     </div>
-                    <ul class="user-online"></ul>
-                </div>
-            </div>
-            <div class="col-md-3 messages-box">
-                <ul id="messages"></ul>
-                <form id="form-chat" action="">
-                    <input autocomplete="off" id="m">
-                    <button class="">Send</button>
                 </form>
             </div>
-            <div class="col-md-6 video-box">
-                <div class="pure-g">
+        </div>
 
-                    <!-- Video area -->
-                    <div class="pure-u-2-3" id="video-container">
-                        <video id="their-video" autoplay></video>
-                        <video id="my-video" muted="true" autoplay></video>
+        <div id="messageArea" class="row">
+            <div class="col col-md-2 status-box">
+                <div class="card">
+                    <div class="card-header card-inverse card-success  mb-3 text-center">
+                        Online Users
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group" id="list-users"></ul>
                     </div>
 
-                    <!-- Steps -->
-                    <div class="pure-u-1-3">
+                </div>
+            </div>
 
-                        <!-- Get local audio/video stream -->
-                        <div id="step1">
-                            <div id="step1-error">
-                                <a href="#" class="pure-button pure-button-error" id="step1-retry">Try again</a>
+            <div class="col col-md-4 messages-box">
+                <div class="card">
+                    <div class="card-header card-inverse card-primary mb-3 text-center">
+                        Box Messages
+                    </div>
+                    <div class="card-body">
+                        <div id="chatContent"></div>
+                        <form id="messageForm">
+                            <div class="form-group">
+                                <label>Enter Message</label>
+                                <textarea class="form-control" id="message"></textarea>
+                                <br />
+                                <input type="submit" class="btn btn-primary" value="Send message">
                             </div>
-                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col col-md-5 video-box">
+                <!-- Video area -->
+                <div class="videoArea" id="video-container">
+                    <video width="320" height="240" controls id="my-video" muted="true" autoplay></video>
+                    <video width="320" height="240" controls id="their-video" autoplay></video>
+                </div>
 
-                        <!-- Make calls to others -->
-                        <div id="step2">
-                            <p>Your id: <span id="my-id">...</span></p>
-                            <p>Share this id with others so they can call you.</p>
-                            <h3>Make a call</h3>
-                            <div class="pure-form">
-                                <input type="text" placeholder="Call user id..." id="callto-id">
-                                <a href="#" class="pure-button pure-button-success" id="make-call">Call</a>
-                            </div>
+                <!-- Steps -->
+                <div class="localVideoArea">
+                    <!-- Get local audio/video stream -->
+                    <div id="localVideo">
+                        <div id="localVideo-error">
+                            <a href="#" class="pure-button pure-button-error" id="localVideo-retry">Load your video</a>
                         </div>
+                    </div>
 
-                        <!-- Call in progress -->
-                        <div id="step3">
-                            <p>Currently in call with <span id="their-id">...</span></p>
-                            <p><a href="#" class="pure-button pure-button-error" id="end-call">End call</a></p>
+                    <!-- Make calls to others -->
+                    <div id="infoLocal">
+                        <p>Your id: <span id="my-id">...</span></p>
+                        <p>Share this id with others so they can call you.</p>
+                        <h3>Make a call</h3>
+                        <div class="pure-form">
+                            <input type="text" placeholder="Call user id..." id="callto-id">
+                            <a href="#" class="pure-button pure-button-success" id="make-call">Call</a>
                         </div>
+                    </div>
+
+                    <!-- Call in progress -->
+                    <div id="remoteControl">
+                        <p>Currently in call with <span id="their-id">...</span></p>
+                        <p><a href="#" class="pure-button pure-button-error" id="end-call">End call</a></p>
                     </div>
                 </div>
             </div>
         </div>
 </body>
-
 </html>
