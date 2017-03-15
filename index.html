@@ -126,8 +126,7 @@
 
             // Wait for stream on the call, then set peer video display
             call.on('stream', function(stream) {
-                // urlVideo = URL.createObjectURL(stream);
-                $('#their-video').append('<video src="' + URL.createObjectURL(stream) + '"></video>');
+                $('#their-video').prop('src', URL.createObjectURL(stream));
             });
 
             // UI stuff
@@ -164,10 +163,7 @@
 
                     <!-- Video area -->
                     <div class="pure-u-2-3" id="video-container">
-                        <div id="their-video">
-
-                        </div>
-
+                        <video id="their-video" autoplay></video>
                         <video id="my-video" muted="true" autoplay></video>
                     </div>
 
@@ -202,4 +198,5 @@
             </div>
         </div>
 </body>
+
 </html>
