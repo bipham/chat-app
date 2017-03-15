@@ -1,6 +1,23 @@
 var express = require('express');
 var http = require('http');
 var app = express();
+var mysql = require('mysql');
+
+var conn = mysql.createConnection({
+	host: 'localhost',
+	user: 'root',
+	password: '',
+	database: 'simple-chat'
+});
+
+conn.connect(function(error){
+	if(!!error) {
+		console.log('Error');
+	}
+	else {
+		console.log('Connected');
+	}
+});
 
 var static = require('node-static');
 var file = new(static.Server)();
@@ -27,6 +44,15 @@ io.sockets.on('connection', function(socket) {
 	//Send messages:
 	socket.on('send message', function(data) {
 		console.log(data);
+		conn.query('INSERT INTO history (username, message) VALUES ("' + socket.username + '","'+ data + '")', function(err, row, field) {
+			if(err) {
+				console.log('ERROR INSERT');
+				throw err;
+			}
+			else {
+				console.log('INSERT SUCCESS');
+			}
+		});
 		io.sockets.emit('new message', {msg: data, user: socket.username});
 	});
 
