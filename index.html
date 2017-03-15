@@ -51,7 +51,10 @@
             var $messageArea = $('#messageArea');
             var $users = $('#list-users');
             var $username = $('#username');
+            var $imageFile = $('#imageFile');
+            var $shareImage = $('#shareImage');
 
+            //Send mess
             $messageForm.submit(function() {
                 // e.prventDefault();
                 console.log($message.val());
@@ -60,6 +63,7 @@
                 return false;
             });
 
+            //Recieved new mess
             socket.on('new message', function(data) {
                 console.log(data);
                 $chatContent.append($('<div class="well"><strong>' + data.user + '</strong>: ' + data.msg + '</div>'));
@@ -78,12 +82,28 @@
                 return false;
             });
 
+            //Update Users Online
             socket.on('get users', function(data) {
                 var html = '';
                 for (i = 0; i < data.length; i++) {
                     html += '<li class="list-group-item">' + data[i] + '</li>';
                 }
                 $users.html(html);
+            });
+
+            //Send Image
+            $imageFile.on('change', function(e) {
+                var file = e.originalEvent.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    socket.emit('user image', evt.target.result);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            //Load Image:
+            socket.on('addImage', function(data){
+                $chatContent.append($('<div class="well"><strong>' + data.user + '</strong>: <img height="100" width="100" src="' + data.img + '"></div>'));
             });
         });
 
@@ -221,6 +241,7 @@
                                 <textarea class="form-control" id="message"></textarea>
                                 <br />
                                 <input type="submit" class="btn btn-primary" value="Send message">
+                                <input type="file"  value="Share Image" id="imageFile">
                             </div>
                         </form>
                     </div>

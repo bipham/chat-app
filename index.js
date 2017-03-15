@@ -41,4 +41,9 @@ io.sockets.on('connection', function(socket) {
 	function updateUsernames() {
 		io.sockets.emit('get users', users)
 	}
+
+	//Share image:
+	socket.on('user image', function(image) {
+		io.sockets.emit('addImage', {img: image, user: socket.username});
+	});
 });
