@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo Chat</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <style type="text/css">
+        #messages li:nth-child(odd) {
+            background: #eee;
+        }
+        body {
+        	margin-top: 30px;
+        }
+        .status-box {
+        	/*border: 1px solid black;*/
+   			/*margin-right: 20px;*/
+        }
+        .messages-box {
+        	/*border: 1px solid black;*/
+    		/*margin-right: 20px;*/
+    		padding-top: 20px;
+        }
+		
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
+    <script>
+        $(function() {
+            var socket = io();
+            $('form').submit(function() {
+                socket.emit('chat message', $('#m').val());
+                $('#m').val('');
+                return false;
+            });
+            socket.on('chat message', function(msg) {
+                $('#messages').append($('<li>').text(msg));
+            });
+        });
+
+        // Compatibility shim
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+        // PeerJS object
+        var peer = new Peer({
+            key: 'xdfzho06d6wm6lxr',
+            debug: 3
+        });
+
+        peer.on('open', function() {
+            $('#my-id').text(peer.id);
+        });
+
+        // Receiving a call
+        peer.on('call', function(call) {
+            // Answer the call automatically (instead of prompting user) for demo purposes
+            call.answer(window.localStream);
+            step3(call);
+        });
+        peer.on('error', function(err) {
+            alert(err.message);
+            // Return to step 2 if error occurs
+            step2();
+        });
+
+        // Click handlers setup
+        $(function() {
+            $('#make-call').click(function() {
+                step1();
+                // Initiate a call!
+                var call = peer.call($('#callto-id').val(), window.localStream);
+
+                step3(call);
+            });
+
+            $('#end-call').click(function() {
+                window.existingCall.close();
+                step2();
+            });
+
+            // Retry if getUserMedia fails
+            $('#step1-retry').click(function() {
+                $('#step1-error').hide();
+                step1();
+            });
+
+            // Get things started
+
+        });
+
+        function step1() {
+            // Get audio/video stream
+            navigator.getUserMedia({
+                audio: true,
+                video: true
+            }, function(stream) {
+                // Set your video displays
+                $('#my-video').prop('src', URL.createObjectURL(stream));
+
+                window.localStream = stream;
+                step2();
+            }, function() {
+                $('#step1-error').show();
+            });
+        }
+
+        function step2() {
+            $('#step1, #step3').hide();
+            $('#step2').show();
+        }
+
+        function step3(call) {
+            // Hang up on an existing call if present
+            if (window.existingCall) {
+                window.existingCall.close();
+            }
+
+            // Wait for stream on the call, then set peer video display
+            call.on('stream', function(stream) {
+                // urlVideo = URL.createObjectURL(stream);
+                $('#their-video').append('<video src="' + URL.createObjectURL(stream) + '"></video>');
+            });
+
+            // UI stuff
+            window.existingCall = call;
+            $('#their-id').text(call.peer);
+            call.on('close', step2);
+            $('#step1, #step2').hide();
+            $('#step3').show();
+        }
+    </script>
+    <!-- <script src='/adapter/adapter.js'></script> -->
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 status-box">
+                <div class="card">
+  <div class="card-header">
+    Onlines
+  </div>
+  <ul class="user-online"></ul>
+</div>
+            </div>
+            <div class="col-md-3 messages-box">
+                <ul id="messages"></ul>
+                <form id="form-chat" action="">
+                    <input autocomplete="off" id="m">
+                    <button class="">Send</button>
+                </form>
+            </div>
+            <div class="col-md-6 video-box">
+                <div class="pure-g">
+
+                    <!-- Video area -->
+                    <div class="pure-u-2-3" id="video-container">
+                        <div id="their-video">
+
+                        </div>
+
+                        <video id="my-video" muted="true" autoplay></video>
+                    </div>
+
+                    <!-- Steps -->
+                    <div class="pure-u-1-3">
+
+                        <!-- Get local audio/video stream -->
+                        <div id="step1">
+                            <div id="step1-error">
+                                <a href="#" class="pure-button pure-button-error" id="step1-retry">Try again</a>
+                            </div>
+                        </div>
+
+                        <!-- Make calls to others -->
+                        <div id="step2">
+                            <p>Your id: <span id="my-id">...</span></p>
+                            <p>Share this id with others so they can call you.</p>
+                            <h3>Make a call</h3>
+                            <div class="pure-form">
+                                <input type="text" placeholder="Call user id..." id="callto-id">
+                                <a href="#" class="pure-button pure-button-success" id="make-call">Call</a>
+                            </div>
+                        </div>
+
+                        <!-- Call in progress -->
+                        <div id="step3">
+                            <p>Currently in call with <span id="their-id">...</span></p>
+                            <p><a href="#" class="pure-button pure-button-error" id="end-call">End call</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+</body>
+
+</html>
