@@ -72,4 +72,19 @@ io.sockets.on('connection', function(socket) {
 	socket.on('user image', function(image) {
 		io.sockets.emit('addImage', {img: image, user: socket.username});
 	});
+
+	//Show history:
+	socket.on('show history', function() {
+		conn.query('SELECT * FROM history ORDER BY ID DESC', function(err, rows, field) {
+			if(err) {
+				console.log('ERROR SELECT');
+				throw err;
+			}
+			else {
+				var data = rows;
+				console.log(data);
+				io.sockets.emit('load history', data);
+			}
+		});
+	});
 });

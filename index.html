@@ -53,6 +53,7 @@
             var $username = $('#username');
             var $imageFile = $('#imageFile');
             var $shareImage = $('#shareImage');
+            var $showHistory = $('#showHistory');
 
             //Send mess
             $messageForm.submit(function() {
@@ -104,6 +105,19 @@
             //Load Image:
             socket.on('addImage', function(data){
                 $chatContent.append($('<div class="well"><strong>' + data.user + '</strong>: <img height="100" width="100" src="' + data.img + '"></div>'));
+            });
+
+            //Show History:
+            $showHistory.click(function() {
+                socket.emit('show history');
+                $showHistory.hide();
+            });
+
+            socket.on('load history', function(data) {
+                console.log(data);
+                $.each(data, function() {
+                    $chatContent.prepend($('<div class="well"><strong>' + this.username + '</strong>: ' + this.message + '</div>'));
+                });
             });
         });
 
@@ -237,13 +251,13 @@
                         <div id="chatContent"></div>
                         <form id="messageForm">
                             <div class="form-group">
-                                <label>Enter Message</label>
-                                <textarea class="form-control" id="message"></textarea>
+                                <input class="form-control" id="message" placeholder="Enter message"></input>
                                 <br />
                                 <input type="submit" class="btn btn-primary" value="Send message">
                                 <input type="file"  value="Share Image" id="imageFile">
                             </div>
                         </form>
+                        <a href="#" id="showHistory">Show history</a>
                     </div>
                 </div>
             </div>
