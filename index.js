@@ -12,10 +12,10 @@ var conn = mysql.createConnection({
 
 conn.connect(function(error){
 	if(!!error) {
-		console.log('Error');
+		console.log('Connect DB error');
 	}
 	else {
-		console.log('Connected');
+		console.log('DB Connected');
 	}
 });
 
@@ -53,19 +53,33 @@ io.sockets.on('connection', function(socket) {
 				console.log('INSERT SUCCESS');
 			}
 		});
-		io.sockets.emit('new message', {msg: data, user: socket.username});
+		io.sockets.in(socket.roomName).emit('new message', {msg: data, user: socket.username});
 	});
 
 	//New user:
 	socket.on('new user', function(data, callback) {
 		callback(true);
-		socket.username = data;
-		users.push(socket.username);
+		socket.username = data.username;
+		socket.roomName = data.roomName;
+		socket.idVideo = data.idVideo;
+		console.log(data);
+		if (typeof users[socket.roomName] == 'undefined') {
+    		// the variable is defined
+    		users[socket.roomName] = {};
+    		var idSocket = socket.id + '-' + socket.idVideo;
+    		users[socket.roomName][socket.username] = idSocket;
+		}
+		else {
+            var idSocket = socket.id + '-' + socket.idVideo;
+            users[socket.roomName][socket.username] = idSocket;
+		}
+		console.log(users[socket.roomName]);
+		socket.join(socket.roomName);
 		updateUsernames();
-	})
+	});
 
 	function updateUsernames() {
-		io.sockets.emit('get users', users)
+		io.sockets.in(socket.roomName).emit('get users', users[socket.roomName])
 	}
 
 	//Share image:
@@ -87,4 +101,15 @@ io.sockets.on('connection', function(socket) {
 			}
 		});
 	});
+
+	//Request call:
+	socket.on('request call', function (data) {
+        console.log(data);
+        var idSocket = data.idSocket;
+        socket.broadcast.in(idSocket).emit('confirm call', data.idVideoSocket);
+    });
+	socket.on('accepted', function (data) {
+        console.log(data);
+        io.sockets.in(socket.roomName).emit('start call', data);
+    });
 });
