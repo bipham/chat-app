@@ -66,11 +66,11 @@ io.sockets.on('connection', function(socket) {
 		if (typeof users[socket.roomName] == 'undefined') {
     		// the variable is defined
     		users[socket.roomName] = {};
-    		var idSocket = socket.id + '-' + socket.idVideo;
+    		var idSocket = socket.id + '+++' + socket.idVideo;
     		users[socket.roomName][socket.username] = idSocket;
 		}
 		else {
-            var idSocket = socket.id + '-' + socket.idVideo;
+            var idSocket = socket.id + '+++' + socket.idVideo;
             users[socket.roomName][socket.username] = idSocket;
 		}
 		console.log(users[socket.roomName]);

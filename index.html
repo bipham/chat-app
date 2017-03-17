@@ -20,12 +20,17 @@
             margin-top: 30px;
         }
 
+        .container-fluid {
+            margin-left: 5%;
+            margin-right: 5%;
+        }
+
         #messageArea {
             display: none;
         }
 
-        .messages-box .card-body {
-            padding: 0 10px 0 10px;
+        .messages-box .card-body #chatControl {
+            padding: 10px 10px 0 10px;
         }
 
         .col {
@@ -48,6 +53,12 @@
         #videoCallArea {
             display: none;
         }
+
+        #chatContent {
+            height: 500px;
+            background-color: #eeeeee;
+        }
+
     </style>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -57,7 +68,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div id="userFormArea" class="row">
             <div class="col-md-6">
                 <form id="userForm">
@@ -75,7 +86,7 @@
         <div id="messageArea" class="row">
             <div class="col col-md-2 status-box">
                 <div class="card">
-                    <div class="card-header card-inverse card-success  mb-3 text-center">
+                    <div class="card-header card-inverse card-success text-center">
                         Online Users
                     </div>
                     <div class="card-body">
@@ -90,7 +101,7 @@
                 <div id="videoCallArea">
                     <div class="videoArea" id="video-container">
                         <video width="320" height="240" controls id="my-video" muted="true" autoplay></video>
-                        <video width="320" height="240" controls id="their-video" autoplay></video>
+                        <video width="640" height="480" controls id="their-video" autoplay></video>
                     </div>
 
                     <!-- Steps -->
@@ -114,20 +125,22 @@
 
             <div class="col col-md-4 messages-box">
                 <div class="card">
-                    <div class="card-header card-inverse card-primary mb-3 text-center">
+                    <div class="card-header card-inverse card-primary text-center">
                         Box Messages
                     </div>
                     <div class="card-body">
                         <div id="chatContent"></div>
-                        <form id="messageForm">
-                            <div class="form-group">
-                                <input class="form-control" id="message" placeholder="Enter message">
-                                <br />
-                                <input type="submit" class="btn btn-primary" value="Send message">
-                                <input type="file" value="Share Image" id="imageFile">
-                            </div>
-                        </form>
-                        <a href="#" id="showHistory">Show history</a>
+                        <div id="chatControl">
+                            <form id="messageForm">
+                                <div class="form-group">
+                                    <input class="form-control" id="message" placeholder="Enter message">
+                                    <br />
+                                    <input type="submit" class="btn btn-primary" value="Send message">
+                                    <input type="file" value="Share Image" id="imageFile">
+                                </div>
+                            </form>
+                            <a href="#" id="showHistory">Show history</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -279,11 +292,11 @@
             $(document).on('click', 'button.video-call', function() {
                 // Initiate a call!
                 var idCall = $(this).val();
-                var tmpString = idCall.split('-');
+                var tmpString = idCall.split('+++');
                 var idSocket = tmpString[0];
                 var idVideoSocket = tmpString[1];
-                console.log(idSocket);
-                console.log(idVideoSocket);
+                console.log('idSocket: ' + idSocket);
+                console.log('idVideoSocket: ' + idVideoSocket);
                 socket.emit('request call', {
                     idSocket: idSocket,
                     idVideoSocket: idVideoSocket
