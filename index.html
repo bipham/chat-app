@@ -128,7 +128,7 @@
             <div class="col col-md-4 messages-box">
                 <div class="card">
                     <div class="card-header card-inverse card-primary text-center">
-                        Box Messages
+                        Room:
                     </div>
                     <div class="card-body">
                         <div id="chatContent"></div>
@@ -199,6 +199,7 @@
                 socketID = socket.id;
                 usernameSocket = $username.val();
                 roomName = $roomName.val();
+                $('.messages-box .card-header').html('Room: ' + roomName);
                 console.log('Room: ' + $roomName.val());
                 if ((usernameSocket != '') && (roomName != '')) {
                     socket.emit('new user', {
