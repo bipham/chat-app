@@ -43,8 +43,10 @@ io.sockets.on('connection', function(socket) {
 
 	//Send messages:
 	socket.on('send message', function(data) {
-		console.log(data);
-		conn.query('INSERT INTO history (username, message) VALUES ("' + socket.username + '","'+ data + '")', function(err, row, field) {
+		console.log('mess: ' + data);
+		console.log('User: ' + socket.username);
+		console.log('Room: ' + socket.roomName);
+		conn.query('INSERT INTO history (username, message, room) VALUES ("' + socket.username + '","' + data  + '","'+ socket.roomName + '")', function(err, row, field) {
 			if(err) {
 				console.log('ERROR INSERT');
 				throw err;
@@ -88,16 +90,27 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	//Show history:
-	socket.on('show history', function() {
-		conn.query('SELECT * FROM history ORDER BY ID DESC', function(err, rows, field) {
+	socket.on('show history', function(data) {
+		console.log('Current: ' + data.timeStart);
+		console.log('Current query: ' + data.startQuery);
+		console.log('Room Name: ' + socket.roomName);
+		var startQuery = data.startQuery;
+		conn.query('SELECT * FROM history WHERE room = "' + socket.roomName + '" AND UNIX_TIMESTAMP(created) < ' + data.timeStart + ' ORDER BY ID DESC LIMIT ' + startQuery + ', 10', function(err, rows) {
 			if(err) {
 				console.log('ERROR SELECT');
 				throw err;
 			}
 			else {
-				var data = rows;
-				console.log(data);
-				io.sockets.emit('load history', data);
+				if (rows.length > 0) {
+					startQuery = startQuery + rows.length;
+					var data = rows;
+					console.log('ID SOCKET: ' + socket.id);
+					console.log('DATA SELECTED: ' + rows.length);
+					io.sockets.in(socket.id).emit('load history', {data: data, startQuery: startQuery});
+				}
+				else {
+					io.sockets.in(socket.id).emit('full history');
+				}
 			}
 		});
 	});

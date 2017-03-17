@@ -57,6 +57,8 @@
         #chatContent {
             height: 500px;
             background-color: #eeeeee;
+            padding: 10px;
+            overflow: auto;
         }
 
     </style>
@@ -164,14 +166,20 @@
             var $showHistory = $('#showHistory');
             var idVideo = '';
             var socketID = '';
+            var roomName = '';
+            var timeStart;
+            var startQuery = 0;
+            var limit = 5;
 
             //Send mess
             $messageForm.submit(function() {
                 // e.prventDefault();
                 console.log($message.val());
-                socket.emit('send message', $message.val());
-                $message.val('');
-                return false;
+                if ($message.val() != '') {
+                    socket.emit('send message', $message.val());
+                    $message.val('');
+                    return false;
+                }
             });
 
             //Recieved new mess
@@ -185,24 +193,30 @@
                 // e.prventDefault();
                 console.log(socket);
                 console.log(socket.id);
+                var timestamp = Date.now();
+                timeStart = Math.floor(timestamp / 1000);
+                console.log('Time: ' + timeStart);
                 socketID = socket.id;
                 usernameSocket = $username.val();
+                roomName = $roomName.val();
                 console.log('Room: ' + $roomName.val());
-                socket.emit('new user', {
-                    username: $username.val(),
-                    roomName: $roomName.val(),
-                    idVideo: idVideo,
-                    socketID: socketID
-                }, function(data) {
-                    if (data) {
-                        $userFormArea.hide();
-                        $messageArea.show();
-                    }
-                });
-                console.log(socket);
-                $username.val('');
-                $roomName.val('');
-                return false;
+                if ((usernameSocket != '') && (roomName != '')) {
+                    socket.emit('new user', {
+                        username: $username.val(),
+                        roomName: $roomName.val(),
+                        idVideo: idVideo,
+                        socketID: socketID
+                    }, function(data) {
+                        if (data) {
+                            $userFormArea.hide();
+                            $messageArea.show();
+                        }
+                    });
+                    console.log(socket);
+                    $username.val('');
+                    $roomName.val('');
+                    return false;
+                }
             });
 
             //Update Users Online
@@ -234,17 +248,24 @@
 
             //Show History:
             $showHistory.click(function() {
-                socket.emit('show history');
-                $showHistory.hide();
+                socket.emit('show history', {timeStart: timeStart, startQuery: startQuery});
+//                $showHistory.hide();
             });
 
             socket.on('load history', function(data) {
-                console.log(data);
-                $.each(data, function() {
+                console.log(data.data);
+//                var contentHTML = '';
+                $.each(data.data, function() {
                     $chatContent.prepend($('<div class="well"><strong>' + this.username + '</strong>: ' + this.message + '</div>'));
+//                    $chatContent.html(contentHTML);
                 });
+                startQuery = data.startQuery;
+                console.log('startQuery: ' + startQuery);
             });
 
+            socket.on('full history', function () {
+               alert('History up to date!');
+            });
 
             // Compatibility shim
             navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
