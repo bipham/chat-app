@@ -26,7 +26,7 @@ app.get('/', function(req, res) {
 });
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
-server.listen(8000);
+server.listen(5000);
 console.log('Server running ....');
 users = [];
 connections = [];
