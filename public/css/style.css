@@ -1,0 +1,177 @@
+#messages li:nth-child(odd) {
+    background: #eee;
+}
+
+body {
+    margin-top: 30px;
+}
+
+.container-fluid {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+#messageArea {
+    display: none;
+}
+
+.messages-box .card-body #chatControl {
+    padding: 10px 10px 0 10px;
+}
+
+.col {
+    float: left;
+}
+
+#their-video {
+    display: none;
+}
+
+.call-area {
+    margin-left: 10px;
+    /*display: none;*/
+}
+
+.call-area:hover {
+    /*display: inline-block;*/
+}
+
+#videoCallArea {
+    display: none;
+}
+
+#chatContent {
+    height: 500px;
+    background-color: #eeeeee;
+    padding: 10px;
+    overflow: auto;
+    padding-right: 35px;
+}
+
+img.my-avatar {
+    width: 100px;
+    height: 100px;
+}
+
+img.choose-avatar {
+    width: 50px;
+    height: 50px;
+}
+
+.card.my-profile .card-body {
+    padding: 10px;
+}
+
+input.btn-register {
+    margin-top: 10px;
+}
+
+.choose-avatar {
+    margin-top: 10px;
+}
+
+.chats {
+    list-style-type: none;
+    margin-top:10px;
+    height: 430px;
+}
+
+.alert-user {
+    float: left;
+    width: 100%;
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.me {
+    clear:both;
+    float:left;
+    margin-bottom:10px;
+}
+
+.me .image {
+    float: left;
+    text-align: center;
+}
+
+.chat-avatar{
+    width: 50px;
+    height: 50px;
+}
+
+.you {
+    clear:both;
+    float:right;
+    margin-bottom:10px;
+}
+
+.you .image{
+    float:right;
+    text-align: center;
+}
+
+.chats .me p {
+    text-align:left;
+    float: left;
+    display: inline-block;
+    margin-left: 20px;
+    margin-bottom:30px;
+    padding: 25px 34px;
+    min-width: 160px;
+    min-height: 10px;
+    max-width: 510px;
+    background-color: #FFF;
+    border-radius: 3px;
+    box-shadow: 0px 3px 3px #E3E4E6;
+    color: #637277;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.chats .you p {
+    text-align:left;
+    float: left;
+    display: inline-block;
+    margin-right:20px;
+    margin-bottom:30px;
+    padding: 25px 34px;
+    min-width: 160px;
+    min-height: 10px;
+    max-width: 510px;
+    background-color: #FFF;
+    border-radius: 3px;
+    box-shadow: 0px 3px 3px #E3E4E6;
+    color: #637277;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+#imageFile {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+#avatarUpload {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.shareImage {
+    top: 7px;
+    position: relative;
+}
+
+.whoType {
+    background-color: rgba(208, 208, 208, 0.45);
+    padding-left: 5px;
+    font-style: italic;
+}

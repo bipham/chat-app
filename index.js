@@ -24,6 +24,8 @@ var file = new(static.Server)();
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
+app.use('/', express.static(__dirname + '/public'));
+
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 server.listen(5000);
@@ -36,9 +38,26 @@ io.sockets.on('connection', function(socket) {
 
 	//Disconnect
 	socket.on('disconnect', function(data) {
-		users.splice(users.indexOf(socket.username, 1));
 		connections.splice(connections.indexOf(socket), 1);
+		// Notify the other person in the chat room
+		// that his partner has left
+		io.sockets.in(this.roomName).emit('leave', {
+			boolean: true,
+			room: this.roomName,
+			user: this.username,
+			avatar: this.avatar
+		});
+		// leave the room
+		if (typeof this.roomName != 'undefined') {
+			delete users[this.roomName][this.username];
+			console.log('del success');
+		}
+		console.log('Dis room: ' + this.roomName);
+		console.log('Dis user: ' + this.username);
+		updateUsernames(this.roomName);
+		// socket.leave(this.roomName);
 		console.log('Disconnected: %s sockets connected', connections.length);
+
 	});
 
 	//Send messages:
@@ -46,7 +65,8 @@ io.sockets.on('connection', function(socket) {
 		console.log('mess: ' + data);
 		console.log('User: ' + socket.username);
 		console.log('Room: ' + socket.roomName);
-		conn.query('INSERT INTO history (username, message, room) VALUES ("' + socket.username + '","' + data  + '","'+ socket.roomName + '")', function(err, row, field) {
+		console.log('avatar: ' + socket.avatar);
+		conn.query('INSERT INTO history (username, avatar, message, room) VALUES ("' + socket.username + '","' + socket.avatar + '","' + data  + '","'+ socket.roomName + '")', function(err) {
 			if(err) {
 				console.log('ERROR INSERT');
 				throw err;
@@ -55,7 +75,7 @@ io.sockets.on('connection', function(socket) {
 				console.log('INSERT SUCCESS');
 			}
 		});
-		io.sockets.in(socket.roomName).emit('new message', {msg: data, user: socket.username});
+		io.sockets.in(socket.roomName).emit('new message', {msg: data, user: socket.username, avatar: socket.avatar});
 	});
 
 	//New user:
@@ -63,30 +83,45 @@ io.sockets.on('connection', function(socket) {
 		callback(true);
 		socket.username = data.username;
 		socket.roomName = data.roomName;
+		socket.avatar = data.myAvatar;
 		socket.idVideo = data.idVideo;
 		console.log(data);
 		if (typeof users[socket.roomName] == 'undefined') {
     		// the variable is defined
     		users[socket.roomName] = {};
-    		var idSocket = socket.id + '+++' + socket.idVideo;
+    		var idSocket = socket.id + '+++' + socket.idVideo + '+++' + socket.avatar;
     		users[socket.roomName][socket.username] = idSocket;
 		}
 		else {
-            var idSocket = socket.id + '+++' + socket.idVideo;
+            var idSocket = socket.id + '+++' + socket.idVideo + '+++' + socket.avatar;
             users[socket.roomName][socket.username] = idSocket;
 		}
-		console.log(users[socket.roomName]);
 		socket.join(socket.roomName);
-		updateUsernames();
+		updateUsernames(socket.roomName);
+		io.sockets.in(socket.roomName).emit('new user join', socket.username);
 	});
 
-	function updateUsernames() {
-		io.sockets.in(socket.roomName).emit('get users', users[socket.roomName])
+	function updateUsernames(room) {
+		io.sockets.in(room).emit('get users', users[room]);
 	}
 
 	//Share image:
 	socket.on('user image', function(image) {
-		io.sockets.emit('addImage', {img: image, user: socket.username});
+		io.sockets.emit('addImage', {img: image, user: socket.username, avatar: socket.avatar});
+	});
+
+	//Upload Avatar:
+	socket.on('upload avatar', function (data) {
+		var avatar = data.avatar;
+		var base64Data = avatar.replace(/^data:image\/png;base64,/, "");
+		var imgName = data.user;
+		imgName = imgName.replace(/\s+/g, '');
+		console.log('imgs: ' + base64Data);
+		require("fs").writeFile("public/img/" + imgName + ".png", base64Data, 'base64', function(err) {
+			console.log(err);
+		});
+		var imgUrl = "img/" + imgName + ".png";
+		io.sockets.in(socket.id).emit('change upload avatar', {img: imgUrl, user: socket.username, avatar: socket.avatar});
 	});
 
 	//Show history:
@@ -125,4 +160,23 @@ io.sockets.on('connection', function(socket) {
         console.log(data);
         io.sockets.in(socket.roomName).emit('start call', data);
     });
+
+	//Update Name Register:
+	socket.on('sendUserNameRegister', function (data) {
+		socket.emit('updateUserNameRegister', data);
+	});
+
+	//Update avatar:
+	socket.on('choose avatar', function (data) {
+		socket.emit('updateAvatar', data);
+	});
+
+	//Who is typing:
+	socket.on('typing', function () {
+		socket.broadcast.in(socket.roomName).emit('who is typing');
+	});
+
+	socket.on('noLongerTypingMessage', function () {
+		socket.broadcast.in(socket.roomName).emit('no one typing');
+	});
 });
