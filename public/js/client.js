@@ -41,7 +41,6 @@ $(function() {
         if ($message.val() != '') {
             socket.emit('send message', $message.val());
             $message.val('');
-            // $chats.animate({ scrollTop: $chats.height() }, 1000);
             return false;
         }
     });
@@ -52,7 +51,7 @@ $(function() {
         console.log('username: ' + usernameSocket);
         if (data.user == usernameSocket) {
             $chats.append($(
-                '<li class="me">'+
+                '<li class="me" tabindex="1">'+
                 '<div class="image">' +
                 '<img class="rounded-circle chat-avatar" src=' + data.avatar + ' />' +
                 '<br />' +
@@ -60,12 +59,10 @@ $(function() {
                 '</div>' +
                 '<p>' + data.msg + '</p>' +
                 '</li>'));
-            // $chats.append($('<li class="me"><img src="' + data.avatar + '" class="rounded-circle choose-avatar"><strong> ' + data.user + '</strong>: ' + data.msg + '</li>'));
         }
         else {
-            // $chats.append($('<li class="you"><img src="' + data.avatar + '" class="rounded-circle choose-avatar"><strong> ' + data.user + '</strong>: ' + data.msg + '</li>'));
             $chats.append($(
-                '<li class="you">'+
+                '<li class="you" tabindex="1">'+
                 '<div class="image">' +
                 '<img class="rounded-circle chat-avatar" src=' + data.avatar + ' />' +
                 '<br />' +
@@ -74,6 +71,7 @@ $(function() {
                 '<p>' + data.msg + '</p>' +
                 '</li>'));
         }
+        $('#chatContent').animate({scrollTop: $('ul.chats li:last-child').position().top}, 'slow');
     });
 
     //New User:
