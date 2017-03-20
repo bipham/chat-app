@@ -41,8 +41,8 @@ $(function() {
         if ($message.val() != '') {
             socket.emit('send message', $message.val());
             $message.val('');
-            return false;
         }
+        return false;
     });
 
     //Recieved new mess
@@ -71,7 +71,8 @@ $(function() {
                 '<p>' + data.msg + '</p>' +
                 '</li>'));
         }
-        $('#chatContent').animate({scrollTop: $('ul.chats li:last-child').position().top}, 'slow');
+        // $('#chatContent').animate({scrollTop: $('ul.chats li:last-child').position().top}, 'slow');
+        $('#chatContent').animate({ scrollTop:  $('#chatContent').attr("scrollHeight") }, 1000);
     });
 
     //New User:
