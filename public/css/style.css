@@ -45,7 +45,6 @@ body {
     background-color: #eeeeee;
     padding: 10px;
     overflow: auto;
-    padding-right: 35px;
 }
 
 img.my-avatar {
@@ -73,7 +72,10 @@ input.btn-register {
 .chats {
     list-style-type: none;
     margin-top:10px;
-    height: 430px;
+    min-height: 430px;
+    height: auto;
+    float: left;
+    width: 100%;
 }
 
 .alert-user {

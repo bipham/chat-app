@@ -72,7 +72,7 @@ $(function() {
                 '</li>'));
         }
         // $('#chatContent').animate({scrollTop: $('ul.chats li:last-child').position().top}, 'slow');
-        $('#chatContent').animate({ scrollTop:  $('#chatContent').attr("scrollHeight") }, 1000);
+        $('#chatContent').animate({ scrollTop:  $('ul.chats').height() }, 1000);
     });
 
     //New User:
