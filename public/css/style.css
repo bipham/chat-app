@@ -97,6 +97,14 @@ input.btn-register {
     text-align: center;
 }
 
+.me img {
+    margin-left: 10px;
+}
+
+.you img {
+    margin-right: 10px;
+}
+
 .chat-avatar{
     width: 50px;
     height: 50px;

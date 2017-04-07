@@ -159,7 +159,7 @@ $(function() {
                 '<br />' +
                 '<strong class="name">' + data.user + '</strong> ' +
                 '</div>' +
-                ' <img height="100" width="100" src="' + data.img + '">' +
+                ' <img height="300" width="300" src="' + data.img + '">' +
                 '</li>'));
         }
         else {
@@ -170,9 +170,10 @@ $(function() {
                 '<br />' +
                 '<strong class="name">' + data.user + '</strong> ' +
                 '</div>' +
-                ' <img height="100" width="100" src="' + data.img + '">' +
+                ' <img height="300" width="300" src="' + data.img + '">' +
                 '</li>'));
         }
+         $('#chatContent').animate({ scrollTop:  $('ul.chats').height() }, 1000);
     });
 
     //Upload avatar:
